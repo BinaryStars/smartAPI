@@ -10,21 +10,37 @@ SwaggerEditor.config(function($provide) {
    * @return {string} - the snippet content for that operation
   */
   function makeOperationSnippet(operationName) {
-  
     return [
       '${1:' + operationName + '}:',
       '  summary: ${2}',
       '  description: ${2}',
+      '  parameters:',
+      '		#add parameter snippet',
+      '     ${3}',
       '  responses:',
-      '    ${3:200:}',
-      '      description: ${4:OK}',
-      '${6}'
+      '    ${4:200:}',
+      '      description: ${5:OK}',
+      '		 #optional: insert more response elements',
+      '      ${6}',
+      '${7}'
     ].join('\n');
   }
-  
-      
-  
-  
+
+  /**
+   * Makes an array snippet's content based on array name and description
+   *
+   * @param {string} name - name
+   * @param {string} desc - description
+   *
+   * @return {string} - the snippet content for that operation
+  */
+  function makeArraySnippet(name, desc) {
+    return [
+      name + ': #' + desc,
+      ' - ${1} '
+    ].join('\n');
+  }
+
   /**
    * Makes an HTTP response code snippet's content based on code
    *
@@ -41,7 +57,7 @@ SwaggerEditor.config(function($provide) {
   }
 
   $provide.constant('snippets', [
-    
+
     {
       name: 'info',
       trigger: 'info',
@@ -52,37 +68,53 @@ SwaggerEditor.config(function($provide) {
         '  title: ${2}',
         '  description: ${3}',
         '  termsOfService: ${4}',
-        '  contact:',
-        '    name: ${7}',
-        '    url: ${8}',
-        '    email: ${9}',
-        '${10}'
+        '  # add "contact" info:',
+        '  ${5}'
       ].join('\n')
-    },	
-	
-	{
+    },
+
+    {
       name: 'contact',
       trigger: 'contact',
       path: ['info'],
       content: [
         'contact:',
-        '  name: ${1}',
-        '  responsibleOrganization: ${2}',
-        '  responsibleDeveloper: ${3}',
-        '  url: ${4}',
-        '  email: ${5}',
-        '${6}'
+        '  responsibleOrganization: ${1}',
+        '  responsibleDeveloper: ${2}',
+        '  url: ${3}',
+        '  email: ${4}',
+        '  # optional: add more contact metadata',
+        '${5}'
       ].join('\n')
-    },	
-    
+    },
+
+    {
+      name: 'schemes',
+      trigger: 'schemes',
+      path: [],
+      content: [
+        'schemes:',
+        '	- ${1}',
+        '${2}'
+      ].join('\n')
+    },
+
     {
       name: 'paths',
       trigger: 'pa',
       path: [],
       content: [
         'paths:',
+        '  #insert a "path" snippet',
         '  ${1}'
       ].join('\n')
+    },
+
+    {
+      name: 'parameterValueType',
+      trigger: 'parameterValueType',
+      path: ['paths', '.', '.', 'parameters', '0'],
+      content: makeArraySnippet('parameterValueType', 'enter search terms (space-deliminated) and hit CTRL-SPACE to get the identifiers')
     },
 
     {
@@ -100,7 +132,8 @@ SwaggerEditor.config(function($provide) {
       trigger: 'path',
       path: ['paths'],
       content: [
-        '/${1}:',
+        '/${1}: #choose a name for your path',
+        '	#add the http operation snippet',
         '  ${2}'
       ].join('\n')
     },
@@ -153,11 +186,28 @@ SwaggerEditor.config(function($provide) {
       trigger: 'param',
       path: ['paths', '.', '.', 'parameters'],
       content: [
-        '  name: ${1}',
+        '- name: ${1}',
         '  in: ${2}',
         '  description: ${3}',
         '  type: ${4}',
-        '${5}'
+        'required: ${5}',
+        '#optional: insert another parameter snippet',
+        '${6}'
+      ].join('\n')
+    },
+
+     // other level parameter
+    {
+      name: 'parameter',
+      trigger: 'param',
+      path: ['dummy'],
+      content: [
+        '- name: ${1}',
+        '  in: ${2}',
+        '  description: ${3}',
+        '  type: ${4}',
+        'required: ${5}',
+        '${6}'
       ].join('\n')
     },
 
@@ -167,15 +217,15 @@ SwaggerEditor.config(function($provide) {
       trigger: 'param',
       path: ['paths', '.', 'parameters'],
       content: [
-        '  name: ${1}',
-        '  in: ${2}',
+        '- name: ${1:parameter_name}',
+        '  in: ${2:path}',
         '  required: true',
-        '  description: ${3}',
-        '  type: ${4}',
+        '  description: ${3:description}',
+        '  type: ${4:string}',
         '${5}'
       ].join('\n')
     },
-	
+
     {
       name: 'response',
       trigger: 'resp',
