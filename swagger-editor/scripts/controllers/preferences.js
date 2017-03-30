@@ -7,7 +7,8 @@ SwaggerEditor.controller('PreferencesCtrl', function PreferencesCtrl($scope,
   $scope.autoComplete = Preferences.get('autoComplete');
   $scope.pointerResolutionBasePath =
     Preferences.get('pointerResolutionBasePath');
-  
+  $scope.suggestionServiceBasePath =
+    Preferences.get('suggestionServiceBasePath');
   $scope.save = function() {
     var keyPressDebounceTime = parseInt($scope.keyPressDebounceTime, 10);
     if (keyPressDebounceTime > 0) {
@@ -20,6 +21,8 @@ SwaggerEditor.controller('PreferencesCtrl', function PreferencesCtrl($scope,
     Preferences.set('autoComplete', $scope.autoComplete);
     Preferences.set('pointerResolutionBasePath',
       $scope.pointerResolutionBasePath);
+    Preferences.set('suggestionServiceBasePath',
+      $scope.suggestionServiceBasePath);
 
     $uibModalInstance.close();
   };

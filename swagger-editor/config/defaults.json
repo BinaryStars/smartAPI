@@ -41,6 +41,6 @@
   "brandingCssClass": "",
   "importProxyUrl": "https://cors-it.herokuapp.com/?url=",
   "pointerResolutionBasePath": null,
-  "suggestionServiceBasePath": ""
+  "suggestionServiceBasePath": "http://smart-api.info/api/suggestion?field="
 
 }
