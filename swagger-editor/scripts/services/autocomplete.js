@@ -2,6 +2,7 @@
 
 var angular = require('angular');
 var _ = require('lodash');
+var yaml = require('yaml-js');
 /*
  * Autocomplete service extends Ace's completion mechanism to provide more
  * relevant completion candidates based on Swagger document.
@@ -14,7 +15,7 @@ SwaggerEditor.service('Autocomplete', function($rootScope, snippets,
   var profilerFlag = false;
   var fieldName = "";
   var suggestions = [];
-  var identifiers = [];
+  var identifierSuggestions = [];
   var counts = [];
   var myArr = [];
   var countIndex = 0;
@@ -36,11 +37,24 @@ SwaggerEditor.service('Autocomplete', function($rootScope, snippets,
       editor.completer.autoSelect = true;
       check = pos;
       $window.addEventListener('message', function(evt) {
+        var ind = 0;
+        var outd = 0;
         if (!profilerFlag) {
-          //	alert(evt.data);
-          var profilerData = evt.data.toString();
-          profilerData = " '" + profilerData + "'";
-          editor.execCommand("insertstring", profilerData);
+          var profilerData = yaml.dump(evt.data);
+          for (var i = 0, l = evt.data.length; i < l; i++) {
+            profilerData = "- " + yaml.dump(evt.data[i]);
+            ind = outd = 0;
+            while (outd < 6) {
+              editor.execCommand("outdent");
+              outd++;
+            }
+            while (ind < 5) {
+           // for (var j = 0, k = 6; j < k; j++) {
+              editor.execCommand("indent");
+              ind++;
+            }
+            editor.execCommand("insertstring", profilerData);
+          }
           profilerFlag = true;
           angular.element('#profiler').remove();
         }
@@ -297,24 +311,34 @@ SwaggerEditor.service('Autocomplete', function($rootScope, snippets,
 
       if (pathLocalName === "parameterValueType") {
         var queryString = getQueryString();
-        while (queryString.length < 1) {
+        while (queryString.length < 0) {
           queryString = getQueryString();
         }
         queryString = (queryString.replace("-", "")).replace(/\s+/g, '');
-        identifiers = getSuggestedIdentifiers("http://localhost:5000/api/v1/search?q=" + queryString);
+        identifierSuggestions = getSuggestedIdentifiers("http://localhost:5000/api/v1/search?q=" + queryString);
+        var pvtURL = Preferences.get('suggestionServiceBasePath') + 'operations.parameters.parameterValueType';
+        suggestions = [];
+        var repoSuggestions = getSuggestedValues(pvtURL);
+        _.pull(repoSuggestions, 'string');
+        suggestions = identifierSuggestions;
+       /* if (_.intersection(repoSuggestions, identifierSuggestions) !== null){
+          suggestions = _.intersection(repoSuggestions, identifierSuggestions);
+        }*/
         flagSrc = "src3";
-        keywordsMap = identifiers;
+        keywordsMap = suggestions;
         keywordsMap.map(constructAceCompletion);
       } else if (KeywordMap.getNonSuggestible().indexOf(pathLocalName) === -1 && pathLocalName !== undefined) {
         flagSrc = "src2";
         suggestions = [];
-        var xhr = new XMLHttpRequest();
         if (field.indexOf('.0') !== -1) {
           field = pathLocalName;
         }
-        var url = Preferences.get('suggestionServiceBasePath') + field;
-        alert(url);
-        xhr.onreadystatechange = function() {
+        // var url = Preferences.get('suggestionServiceBasePath') + field;
+        // suggestions = getSuggestedValues(url);
+        keywordsMap = suggestions;
+        keywordsMap.map(constructAceCompletion);
+
+       /* xhr.onreadystatechange = function() {
           if (xhr.readyState === 4) {
             myArr = JSON.parse(xhr.responseText);
             var arrayLength = myArr.field_values.buckets.length;
@@ -327,7 +351,7 @@ SwaggerEditor.service('Autocomplete', function($rootScope, snippets,
           }
         };
         xhr.open('GET', url, false);
-        xhr.send();
+        xhr.send();*/
       }
 
       // otherwise store the values in the map
@@ -389,9 +413,14 @@ SwaggerEditor.service('Autocomplete', function($rootScope, snippets,
       meta = 'Frequency=' + counts[countIndex];
       score = 350 + parseInt(counts[countIndex], 10);
     } else {
+      countIndex = _.findIndex(myArr.field_values.buckets, function(o) {
+        return o.key === keyword;
+      });
+      if (counts[countIndex] === undefined)
+        counts[countIndex] = 0;
       level = 'should';
-      meta = '';
-      score = 351;
+      meta = 'Frequency=' + counts[countIndex];
+      score = 350 + parseInt(counts[countIndex], 10);
     }
     return {
       caption: keyword,
@@ -487,9 +516,8 @@ SwaggerEditor.service('Autocomplete', function($rootScope, snippets,
     });
   }
 
-   /* function getSuggestedValues(field, wait) {
+  function getSuggestedValues(url) {
     suggestions = [];
-    url += field;
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4 && xhr.status === 200) {
@@ -501,10 +529,10 @@ SwaggerEditor.service('Autocomplete', function($rootScope, snippets,
         }
       }
     };
-    xhr.open('GET', url, wait);
+    xhr.open('GET', url, false);
     xhr.send();
     return suggestions;
-  }*/
+  }
 
   function getSuggestedIdentifiers(elasticURL) {
     var idfs = [];

@@ -27,21 +27,6 @@ SwaggerEditor.config(function($provide) {
   }
 
   /**
-   * Makes an array snippet's content based on array name and description
-   *
-   * @param {string} name - name
-   * @param {string} desc - description
-   *
-   * @return {string} - the snippet content for that operation
-  */
-  function makeArraySnippet(name, desc) {
-    return [
-      name + ': #' + desc,
-      ' - ${1} '
-    ].join('\n');
-  }
-
-  /**
    * Makes an HTTP response code snippet's content based on code
    *
    * @param {string} code - HTTP Response Code
@@ -114,7 +99,22 @@ SwaggerEditor.config(function($provide) {
       name: 'parameterValueType',
       trigger: 'parameterValueType',
       path: ['paths', '.', '.', 'parameters', '0'],
-      content: makeArraySnippet('parameterValueType', 'enter search terms (space-deliminated) and hit CTRL-SPACE to get the identifiers')
+      content: [
+        'parameterValueType:',
+        ' #enter search term(s) followed by a SPACE. Then hit CTRL-SPACE to get the identifiers',
+        ' - ${1}'
+      ].join('\n')
+    },
+
+    {
+      name: 'responseDataType',
+      trigger: 'responseDataType',
+      path: ['paths', '.', '.', 'responses', '.'],
+      content: [
+        'responseDataType:',
+        ' #Press CTRL-SPACE. The Profiler will open on the right panel',
+        ' ${1}'
+      ].join('\n')
     },
 
     {
